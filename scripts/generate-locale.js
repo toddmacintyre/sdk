@@ -1,7 +1,7 @@
 var fs = require('fs');
 var path = require('path')
 
-var dir = 'build/messages/js/components/';
+var dir = 'build/messages/src/components/';
 var output = 'locale/en.js';
 var info = {};
 

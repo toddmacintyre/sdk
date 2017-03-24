@@ -12,3 +12,4 @@ coverage
 locale
 docs/api
 dist
+src/components/AddLayerModal.css

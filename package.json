@@ -1,7 +1,7 @@
 {
   "name": "boundless-sdk-build",
   "private": true,
-  "version": "0.10.28",
+  "version": "0.10.30",
   "description": "SDK for OpenLayers 3 and React plus Flux",
   "main": "index.js",
   "repository": {
@@ -25,7 +25,8 @@
     "release": "npm-run-all clean:build build:babel build:copy-files build:copy:css build:copy:locale build:copy:dist",
     "cover": "mochify --extension .jsx --plugin [ mochify-istanbul --report text --report lcovonly --dir ./coverage --exclude **/src/constants/* --exclude **/src/**/*.css --exclude **/src/**/*.scss --exclude **/__tests__/**/* ] --transform ./scripts/test-transform.js __tests__/**/*.test.js",
     "createdir:build:js": "mkdirp dist/js",
-    "build:css": "node-sass ./src/components/ -o ./src/components && npm run build:copy:css",
+    "build:scss": "node-sass ./src/components/ -o ./src/components",
+    "build:css": "npm-run-all build:scss build:copy:css",
     "removedir:css": "rimraf dist/css",
     "createdir:css": "mkdirp dist/css",
     "createdir:build:css": "npm-run-all removedir:css createdir:css",
@@ -46,7 +47,7 @@
     "serve:gitbook": "gitbook serve",
     "test:mochify": "mochify --extension .jsx --reporter list --transform ./scripts/test-transform.js __tests__/**/*.test.js",
     "test:lint": "eslint __tests__ src --ext .jsx,.js",
-    "test": "npm-run-all --parallel test:mochify test:lint",
+    "test": "npm-run-all build:scss test:mochify test:lint",
     "copy:build": "cp -R dist out",
     "copy:docs": "cp -R _book out/book",
     "spec": "npm-run-all createdir:build:js createdir:build:css createdir:docs build generate:docs generate:gitbook copy:build copy:docs"

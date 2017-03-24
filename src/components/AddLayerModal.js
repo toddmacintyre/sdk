@@ -11,26 +11,33 @@
  */
 
 import React from 'react';
+import Dropzone from 'react-dropzone';
+import util from '../util';
 import ol from 'openlayers';
 import Dialog from './Dialog';
 import Snackbar from 'material-ui/Snackbar';
 import {defineMessages, injectIntl, intlShape} from 'react-intl';
-import RefreshIcon from 'material-ui/svg-icons/navigation/refresh';
 import TextField from 'material-ui/TextField';
+import IconButton from 'material-ui/IconButton';
 import Button from './Button';
 import MenuItem from 'material-ui/MenuItem';
 import SelectField from 'material-ui/SelectField';
-import {List, ListItem} from 'material-ui/List';
-import Checkbox from 'material-ui/Checkbox';
 import WMSService from '../services/WMSService';
 import WFSService from '../services/WFSService';
 import ArcGISRestService from '../services/ArcGISRestService';
 import WMTSService from '../services/WMTSService';
+import FontIcon from 'material-ui/FontIcon';
 import CircularProgress from 'material-ui/CircularProgress';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
+import FillEditor from './FillEditor';
+import StrokeEditor from './StrokeEditor';
 
 import classNames from 'classnames';
 import './AddLayerModal.css';
+
+const newOption = 'NEW';
+const uploadOption = 'UPLOAD';
+const ID_PREFIX = 'sdk-addlayer-';
 
 const messages = defineMessages({
   servertypelabel: {
@@ -38,15 +45,35 @@ const messages = defineMessages({
     description: 'Label for the combo for server type',
     defaultMessage: 'Type'
   },
+  selectlayercombo: {
+    id: 'addwmslayermodal.selectlayercombo',
+    description: 'Text for select layer combo box',
+    defaultMessage: 'Select layer'
+  },
+  sourcecombo: {
+    id: 'addwmslayermodal.sourcecombo',
+    description: 'Text for source combo box',
+    defaultMessage: 'Select layer source'
+  },
   newservername: {
     id: 'addwmslayermodal.newservername',
     description: 'Title for new server name text field',
     defaultMessage: 'Name'
   },
+  newservernamehint: {
+    id: 'addwmslayermodal.newservernamehint',
+    description: 'Hint text for new server name text field',
+    defaultMessage: 'Enter server name'
+  },
   newserverurl: {
     id: 'addwmslayermodal.newserverurl',
     description: 'Title for new server url text field',
     defaultMessage: 'URL'
+  },
+  newserverurlhint: {
+    id: 'addwmslayermodal.newserverurlhint',
+    description: 'Hint text for new server url text field',
+    defaultMessage: 'Enter server URL'
   },
   newservermodaltitle: {
     id: 'addwmslayermodal.newservermodaltitle',
@@ -66,17 +93,12 @@ const messages = defineMessages({
   title: {
     id: 'addwmslayermodal.title',
     description: 'Title for the modal Add layer dialog',
-    defaultMessage: 'Add Layers'
+    defaultMessage: 'New Layer'
   },
   nolayertitle: {
     id: 'addwmslayermodal.nolayertitle',
     description: 'Title to show if layer has no title',
     defaultMessage: 'No Title'
-  },
-  filtertitle: {
-    id: 'addwmslayermodal.filtertitle',
-    description: 'Title for the filter field',
-    defaultMessage: 'Filter'
   },
   errormsg: {
     id: 'addwmslayermodal.errormsg',
@@ -101,12 +123,37 @@ const messages = defineMessages({
   addbutton: {
     id: 'addwmslayermodal.addbutton',
     description: 'Text for the add button',
-    defaultMessage: 'Add'
+    defaultMessage: 'Save'
   },
   closebutton: {
     id: 'addwmslayermodal.closebutton',
     description: 'Text for close button',
-    defaultMessage: 'Close'
+    defaultMessage: 'Cancel'
+  },
+  addserveroption: {
+    id: 'addwmslayermodal.addserveroption',
+    description: 'Combo box option for add new server',
+    defaultMessage: 'Add New Server'
+  },
+  uploadoption: {
+    id: 'addwmslayermodal.uploadoption',
+    description: 'Combo box option for add local layer',
+    defaultMessage: 'Local'
+  },
+  uploadhinttext: {
+    id: 'addwmslayermodal.uploadhinttext',
+    description: 'Hint text for upload',
+    defaultMessage: 'Select location'
+  },
+  uploadlabeltext: {
+    id: 'addwmslayermodal.uploadlabeltext',
+    description: 'Label text for upload',
+    defaultMessage: 'fileName.kml'
+  },
+  uploadicontooltip: {
+    id: 'addwmslayermodal.uploadicontooltip',
+    description: 'Tooltip for upload icon button',
+    defaultMessage: 'Upload file'
   }
 });
 
@@ -142,6 +189,10 @@ class AddLayerModal extends React.PureComponent {
      */
     allowUserInput: React.PropTypes.bool,
     /**
+     * Should we allow people to upload their local vector files?
+     */
+    allowUpload: React.PropTypes.bool,
+    /**
      * @ignore
      */
     intl: intlShape.isRequired
@@ -158,21 +209,33 @@ class AddLayerModal extends React.PureComponent {
   };
 
   static defaultProps = {
-    allowUserInput: false
+    allowUserInput: false,
+    allowUpload: true
+  };
+
+  static formats = {
+    'geojson': new ol.format.GeoJSON(),
+    'json': new ol.format.GeoJSON(),
+    'kml': new ol.format.KML({extractStyles: false}),
+    'gpx': new ol.format.GPX()
   };
 
   constructor(props, context) {
     super(props);
+    this._counter = 0;
     this._proxy = context.proxy;
     this._requestHeaders = context.requestHeaders;
     this._muiTheme = context.muiTheme || getMuiTheme();
     this.state = {
       loading: false,
+      fileName: '',
+      newUrl: '',
+      newName: '',
       sources: this.props.sources.slice(),
       newType: AddLayerModal.addNewTypes[0],
-      newModalOpen: false,
-      source: 0,
-      filter: null,
+      showNew: false,
+      showUpload: false,
+      source: null,
       error: false,
       errorOpen: false,
       layerInfo: null
@@ -181,10 +244,18 @@ class AddLayerModal extends React.PureComponent {
   getChildContext() {
     return {muiTheme: this._muiTheme};
   }
-  componentWillReceiveProps(newProps) {
-    if (newProps.open) {
-      this._getCaps();
-    }
+  componentWillReceiveProps(props) {
+    this.setState({
+      fileName: '',
+      loading: false,
+      source: null,
+      layer: null,
+      layerInfo: null,
+      showNew: false,
+      showUpload: false,
+      newUrl: '',
+      newName: ''
+    });
   }
   componentWillUnmount() {
     if (this._request) {
@@ -271,18 +342,11 @@ class AddLayerModal extends React.PureComponent {
     }
     return olLayer;
   }
-  _getLayersMarkup(layer) {
-    var filter = this.state.filter;
-    var childList;
+  _getLayersMarkup(layer, menuItems) {
     if (layer.Layer) {
-      var children = layer.Layer.map(function(child) {
-        return this._getLayersMarkup(child);
+      layer.Layer.map(function(child) {
+        this._getLayersMarkup(child, menuItems);
       }, this);
-      childList = children;
-    }
-    var onCheck;
-    if (layer.Name !== undefined) {
-      onCheck = this._onCheck.bind(this, layer);
     }
     var layerTitle = this._getLayerTitle(layer);
     var primaryText;
@@ -291,7 +355,6 @@ class AddLayerModal extends React.PureComponent {
     } else {
       primaryText = layerTitle.title;
     }
-    var displayValue = 'block';
     var search = [layer.Title];
     if (layer.Abstract !== undefined) {
       search.push(layer.Abstract);
@@ -299,83 +362,65 @@ class AddLayerModal extends React.PureComponent {
     if (layer.KeywordList) {
       search = search.concat(layer.KeywordList);
     }
-    if (filter !== null) {
-      var match = false;
-      for (var i = 0, ii = search.length; i < ii; ++i) {
-        if (search[i].toUpperCase().indexOf(filter.toUpperCase()) !== -1) {
-          match = true;
-          break;
-        }
-      }
-      if (match === false) {
-        displayValue = 'none';
-      }
-    }
-    return (
-      <ListItem style={{display: displayValue}} leftCheckbox={<Checkbox onCheck={onCheck} />} initiallyOpen={true} key={layer.Name} primaryText={primaryText} secondaryText={layer.Name} nestedItems={childList} />
-    );
-  }
-  _onCheck(layer, proxy, checked) {
-    if (checked) {
-      this._checkedLayers.push(layer);
-    } else {
-      var idx = this._checkedLayers.indexOf(layer)
-      if (idx > -1) {
-        this._checkedLayers.splice(idx, 1);
-      }
+    if (layer.Name) {
+      menuItems.push(
+        <MenuItem key={layer.Name} value={layer} primaryText={primaryText} />
+      );
     }
   }
   close() {
     this.props.onRequestClose();
   }
   addLayers() {
-    var doZoom = false;
-    var initial = ol.extent.createEmpty();
-    var finalExtent;
-    for (var i = 0, ii = this._checkedLayers.length; i < ii; ++i) {
-      var layer = this._onLayerClick(this._checkedLayers[i]);
+    if (this.state.showUpload) {
+      this._readVectorFile();
+    } else {
+      var layer = this._onLayerClick(this.state.layer);
       var extent = layer.get('EX_GeographicBoundingBox');
       if (extent) {
-        finalExtent = ol.extent.extend(initial, extent);
-        doZoom = true;
+        var map = this.props.map;
+        var view = map.getView();
+        map.getView().fit(ol.proj.transformExtent(extent, 'EPSG:4326', view.getProjection()), map.getSize());
       }
+      this.close();
     }
-    if (doZoom) {
-      var map = this.props.map;
-      var view = map.getView();
-      map.getView().fit(ol.proj.transformExtent(finalExtent, 'EPSG:4326', view.getProjection()), map.getSize());
-    }
-    this.close();
   }
   _handleRequestClose() {
     this.setState({
       errorOpen: false
     });
   }
-  _onFilterChange(proxy, value) {
-    this.setState({filter: value});
-  }
-  _onTypeChange(evt, idx, value) {
+  _onNewTypeChange(evt, idx, value) {
     this.setState({newType: value});
   }
+  _onNewUrlKeyPress(evt, value) {
+    if (evt.key === 'Enter') {
+      this.addServer();
+    }
+  }
+  _onNewUrlChange(evt, value) {
+    this.setState({newUrl: value});
+  }
+  _onNewNameChange(evt, value) {
+    this.setState({newName: value});
+  }
   _onSourceChange(evt, idx, value) {
-    if (value === 'new') {
-      this.setState({newModalOpen: true});
+    if (value === uploadOption) {
+      this.setState({layerInfo: null, showNew: false, showUpload: true, layer: null, source: value});
+    } else if (value === newOption) {
+      this.setState({layerInfo: null, showUpload: false, showNew: true, layer: null, source: value});
     } else {
-      this.setState({source: value}, function() {
+      this.setState({layerInfo: null, showUpload: false, showNew: false, source: value}, function() {
         this._refreshService();
       }, this);
     }
-  }
-  closeNewServer() {
-    this.setState({newModalOpen: false});
   }
   _refreshService(onFailure) {
     this._getCaps(onFailure);
   }
   addServer() {
-    var name = this.refs.newservername.getValue();
-    var url = this.refs.newserverurl.getValue();
+    var name = this.state.newName;
+    var url = this.state.newUrl;
     var serverType = this.state.newType;
     var sources = this.state.sources.slice();
     if (url.indexOf('http://') === -1 && url.indexOf('https://') === -1 && url[0] !== '/') {
@@ -386,7 +431,7 @@ class AddLayerModal extends React.PureComponent {
       type: serverType,
       url: url
     });
-    this.setState({source: sources.length - 1, newModalOpen: false, sources: sources}, function() {
+    this.setState({source: sources.length - 1, sources: sources}, function() {
       var me = this;
       this._refreshService(function() {
         var sources = me.state.sources.slice();
@@ -397,22 +442,117 @@ class AddLayerModal extends React.PureComponent {
       });
     }, this);
   }
+  _onChangeSelectLayer(evt, idx, value) {
+    this.setState({
+      layer: value
+    });
+  }
+  _readFile(text) {
+    this._text = text;
+  }
+  _generateId() {
+    return ID_PREFIX + this._counter;
+  }
+  _readVectorFile() {
+    this.setState({
+      loading: true
+    });
+    var me = this;
+    global.setTimeout(function() {
+      var text = me._text;
+      var filename = me.state.fileName;
+      if (text && filename) {
+        var ext = filename.split('.').pop().toLowerCase();
+        var format = AddLayerModal.formats[ext];
+        var map = me.props.map;
+        if (format) {
+          try {
+            var crs = format.readProjection(text);
+            if (crs === undefined) {
+              me.setState({loading: false, error: true, fileName: '', errorOpen: true, msg: 'Unsupported projection'});
+              return;
+            }
+            var features = format.readFeatures(text, {dataProjection: crs,
+              featureProjection: map.getView().getProjection()});
+            if (features && features.length > 0) {
+              var fill = me.state.hasFill ? new ol.style.Fill({color: util.transformColor(me.state.fillColor)}) : undefined;
+              var stroke = me.state.hasStroke ? new ol.style.Stroke({color: util.transformColor(me.state.strokeColor), width: me.state.strokeWidth}) : undefined;
+              var style = new ol.style.Style({
+                fill: fill,
+                stroke: stroke,
+                image: new ol.style.Circle({stroke: stroke, fill: fill, radius: 7})
+              });
+              me._counter++;
+              var lyr = new ol.layer.Vector({
+                id: me._generateId(),
+                style: style,
+                source: new ol.source.Vector({
+                  features: features,
+                  wrapX: false
+                }),
+                title: filename,
+                isRemovable: true,
+                isSelectable: true
+              });
+              map.addLayer(lyr);
+              var extent = lyr.getSource().getExtent();
+              var valid = true;
+              for (var i = 0, ii = extent.length; i < ii; ++i) {
+                var value = extent[i];
+                if (Math.abs(value) == Infinity || isNaN(value) || (value < -20037508.342789244 || value > 20037508.342789244)) {
+                  valid = false;
+                  break;
+                }
+              }
+              if (valid) {
+                map.getView().fit(extent, map.getSize());
+              }
+              me.close();
+            }
+          } catch (e) {
+            if (global && global.console) {
+              me.setState({loading: false, error: true, fileName: '', errorOpen: true, msg: e.message});
+            }
+          }
+        }
+      }
+    }, 0);
+  }
+  _onDrop(files) {
+    if (files.length === 1) {
+      var r = new FileReader(), file = files[0];
+      var me = this;
+      this.setState({fileName: file.name});
+      r.onload = function(e) {
+        me._readFile(e.target.result);
+      };
+      r.readAsText(file);
+    }
+  }
+  _onChangeFill(state) {
+    this.setState(state);
+  }
+  _onChangeStroke(state) {
+    this.setState(state);
+  }
   render() {
+    const {formatMessage} = this.props.intl;
     var selectOptions = this.state.sources.map(function(source, idx) {
       return (<MenuItem key={idx} value={idx} primaryText={source.title} />);
     });
     var typeOptions = AddLayerModal.addNewTypes.map(function(newType) {
       return (<MenuItem key={newType} value={newType} primaryText={newType} />);
     });
-    if (this.props.allowUserInput) {
-      selectOptions.push(<MenuItem key='new' value='new' primaryText='Add New Server' />);
+    if (this.props.allowUpload) {
+      selectOptions.push(<MenuItem key={uploadOption} value={uploadOption} primaryText={formatMessage(messages.uploadoption)} />);
     }
-    this._checkedLayers = [];
-    const {formatMessage} = this.props.intl;
-    var layers;
+    if (this.props.allowUserInput) {
+      selectOptions.push(<MenuItem key={newOption} value={newOption} primaryText={formatMessage(messages.addserveroption)} />);
+    }
+    var layers, layerMenuItems = [];
     if (this.state.layerInfo) {
-      var layerInfo = this._getLayersMarkup(this.state.layerInfo);
-      layers = <List>{layerInfo}</List>;
+      this._getLayersMarkup(this.state.layerInfo, layerMenuItems);
+      layers = <SelectField fullWidth={true} value={this.state.layer} onChange={this._onChangeSelectLayer.bind(this)} floatingLabelText={formatMessage(messages.selectlayercombo)}>{layerMenuItems}</SelectField>;
     }
     var loadingIndicator;
     if (this.state.loading === true) {
@@ -430,24 +570,47 @@ class AddLayerModal extends React.PureComponent {
       />);
     }
     var actions = [
-      <Button buttonType='Flat' primary={true} label={formatMessage(messages.addbutton)} onTouchTap={this.addLayers.bind(this)} />,
-      <Button buttonType='Flat' label={formatMessage(messages.closebutton)} onTouchTap={this.close.bind(this)} />
+      <Button buttonType='Flat' label={formatMessage(messages.closebutton)} onTouchTap={this.close.bind(this)} />,
+      <Button buttonType='Flat' primary={true} label={formatMessage(messages.addbutton)} onTouchTap={this.addLayers.bind(this)} />
     ];
-    var newActions = [
-      <Button buttonType='Flat' primary={true} label={formatMessage(messages.addserverbutton)} onTouchTap={this.addServer.bind(this)} />,
-      <Button buttonType='Flat' label={formatMessage(messages.closebutton)} onTouchTap={this.closeNewServer.bind(this)} />
-    ];
+    var upload;
+    if (this.state.showUpload) {
+      upload = (<div className='noBorderPaper'>
+        <div className='addLayer-fileField'>
+          <Dropzone className='dropzone' multiple={false} onDrop={this._onDrop.bind(this)}>
+          <TextField
+            value={this.state.fileName}
+            floatingLabelFixed={true}
+            hintText={formatMessage(messages.uploadhinttext)}
+            floatingLabelText={formatMessage(messages.uploadlabeltext)}
+            fullWidth={true}
+          />
+          <IconButton tooltip={formatMessage(messages.uploadicontooltip)} tooltipPosition='top-left' className='icon'>
+            <FontIcon className='ms ms-directory' />
+          </IconButton>
+          </Dropzone>
+        </div>
+        <FillEditor disabled={true} onChange={this._onChangeFill.bind(this)} />
+        <StrokeEditor disabled={true} onChange={this._onChangeStroke.bind(this)} />
+      </div>);
+    }
+    var newDialog;
+    if (this.state.showNew) {
+      newDialog = (
+        <div>
+          <SelectField fullWidth={true} floatingLabelText={formatMessage(messages.servertypelabel)} value={this.state.newType} onChange={this._onNewTypeChange.bind(this)}>{typeOptions}</SelectField>
+          <TextField floatingLabelFixed={true} hintText={formatMessage(messages.newservernamehint)} value={this.state.newName} onChange={this._onNewNameChange.bind(this)} fullWidth={true} floatingLabelText={formatMessage(messages.newservername)} />
+          <TextField floatingLabelFixed={true} hintText={formatMessage(messages.newserverurlhint)} value={this.state.newUrl} onKeyPress={this._onNewUrlKeyPress.bind(this)} onChange={this._onNewUrlChange.bind(this)} fullWidth={true} floatingLabelText={formatMessage(messages.newserverurl)} />
+        </div>
+      );
+    }
     return (
-      <Dialog inline={this.props.inline} className={classNames('sdk-component add-layer-modal', this.props.className)}  actions={actions} autoScrollBodyContent={true} modal={true} title={formatMessage(messages.title)} open={this.props.open} onRequestClose={this.close.bind(this)}>
-        <SelectField value={this.state.source} onChange={this._onSourceChange.bind(this)}>
+      <Dialog bodyStyle={{padding: 20}} inline={this.props.inline} className={classNames('sdk-component add-layer-modal', this.props.className)} actions={actions} autoScrollBodyContent={true} modal={true} title={formatMessage(messages.title)} open={this.props.open} onRequestClose={this.close.bind(this)}>
+        <SelectField fullWidth={true} floatingLabelText={formatMessage(messages.sourcecombo)} value={this.state.source} onChange={this._onSourceChange.bind(this)}>
           {selectOptions}
-        </SelectField><Button buttonType='Icon' key='refresh' tooltip={formatMessage(messages.refresh)} onTouchTap={this._refreshService.bind(this)}><RefreshIcon /></Button><br/>
-        <Dialog inline={this.props.inline} open={this.state.newModalOpen} actions={newActions} autoScrollBodyContent={true} onRequestClose={this.closeNewServer.bind(this)} modal={true} title={formatMessage(messages.newservermodaltitle)}>
-          <SelectField floatingLabelText={formatMessage(messages.servertypelabel)} value={this.state.newType} onChange={this._onTypeChange.bind(this)}>{typeOptions}</SelectField><br/>
-          <TextField fullWidth={true} ref='newservername' floatingLabelText={formatMessage(messages.newservername)} /><br/>
-          <TextField fullWidth={true} ref='newserverurl' floatingLabelText={formatMessage(messages.newserverurl)} />
-        </Dialog>
-        <TextField floatingLabelText={formatMessage(messages.filtertitle)} onChange={this._onFilterChange.bind(this)} />
+        </SelectField>
+        {newDialog}
+        {upload}
         {layers}
         {loadingIndicator}
         {error}

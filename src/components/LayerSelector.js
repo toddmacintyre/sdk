@@ -83,8 +83,7 @@ class LayerSelector extends React.PureComponent {
     this._muiTheme = context.muiTheme || getMuiTheme();
     LayerStore.bindMap(this.props.map);
     this.state = {
-      layers: [],
-      value: this.props.value
+      layers: []
     };
   }
   getChildContext() {
@@ -94,14 +93,6 @@ class LayerSelector extends React.PureComponent {
     this._onChangeCb = this._onChange.bind(this);
     LayerStore.addChangeListener(this._onChangeCb);
     this._onChange();
-  }
-  componentDidMount() {
-    if (this.state.value) {
-      var layer = LayerStore.findLayer(this.state.value);
-      if (layer) {
-        this.props.onChange.call(this, layer);
-      }
-    }
   }
   componentWillUnmount() {
     LayerStore.removeChangeListener(this._onChangeCb);
@@ -137,7 +128,7 @@ class LayerSelector extends React.PureComponent {
       );
     });
     return (
-      <SelectField className={classNames('sdk-component layer-selector', this.props.className)} floatingLabelText={formatMessage(messages.labeltext)} hintText={formatMessage(messages.emptytext)} value={this.state.value} onChange={this._onItemChange.bind(this)}>
+      <SelectField className={classNames('sdk-component layer-selector', this.props.className)} floatingLabelText={formatMessage(messages.labeltext)} hintText={formatMessage(messages.emptytext)} value={this.props.value} onChange={this._onItemChange.bind(this)}>
         {selectItems}
       </SelectField>
     );

@@ -74,6 +74,10 @@ class InfoPopup extends React.Component {
      */
     hover: React.PropTypes.bool,
     /**
+     * Identifier to use for this tool. Can be used to group tools together.
+     */
+    toolId: React.PropTypes.string,
+    /**
      * Format to use for WMS GetFeatureInfo requests.
      */
     infoFormat: React.PropTypes.string,
@@ -99,6 +103,7 @@ class InfoPopup extends React.Component {
 
   static defaultProps = {
     hover: false,
+    toolId: 'nav',
     infoFormat: 'text/plain'
   };
 

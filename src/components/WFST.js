@@ -337,6 +337,7 @@ class WFST extends React.PureComponent {
     feature.on('change', function(evt) {
       this._dirty[evt.target.getId()] = true;
     }, this);
+    this.setState({feature: feature});
   }
   _onGeomUpdate() {
     if (!(this.state.layer.getSource() instanceof ol.source.Vector)) {
@@ -469,8 +470,12 @@ class WFST extends React.PureComponent {
       }
       var layerSelector;
       if (this.props.layerSelector) {
+        var id;
+        if (this.state.layer) {
+          id = this.state.layer.get('id');
+        }
         layerSelector = (
-          <LayerSelector disabled={this.state.disabled || !this.state.layer} style={{marginLeft: '36px'}} {...this.props} onChange={this._onLayerSelectChange.bind(this)} id='layerSelector' ref='layerSelector' filter={this._filterLayerList} map={this.props.map} />
+          <LayerSelector value={id} disabled={this.state.disabled || !this.state.layer} style={{marginLeft: '36px'}} {...this.props} onChange={this._onLayerSelectChange.bind(this)} id='layerSelector' ref='layerSelector' filter={this._filterLayerList} map={this.props.map} />
         );
       } else if (this.state.layer) {
         var label = formatMessage(messages.layerlabel) + ': ' + this.state.layer.get('title');

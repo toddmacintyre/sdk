@@ -17,8 +17,6 @@ import TextField from 'material-ui/TextField';
 import Button from './Button';
 import {defineMessages, injectIntl, intlShape} from 'react-intl';
 import LoginActions from '../actions/LoginActions';
-import Snackbar from 'material-ui/Snackbar';
-import Paper from 'material-ui/Paper';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 
 const messages = defineMessages({
@@ -27,15 +25,10 @@ const messages = defineMessages({
     description: 'Title for the modal Login dialog',
     defaultMessage: 'Login'
   },
-  helptext: {
-    id: 'loginmodal.helptext',
-    description: 'Help text',
-    defaultMessage: 'Use your GeoServer credentials to login.'
-  },
   usernamelabel: {
     id: 'loginmodal.userlabel',
     description: 'Label for the username field',
-    defaultMessage: 'Username'
+    defaultMessage: 'User name'
   },
   passwordlabel: {
     id: 'loginmodal.passwordlabel',
@@ -46,11 +39,6 @@ const messages = defineMessages({
     id: 'loginmodal.loginbutton',
     description: 'Text for the login button',
     defaultMessage: 'Login'
-  },
-  closebutton: {
-    id: 'loginmodal.closebutton',
-    description: 'Text for the close button',
-    defaultMessage: 'Close'
   },
   invalidcredentialsmsg: {
     id: 'loginmodal.invalidcredentialsmsg',
@@ -101,8 +89,6 @@ class LoginModal extends React.PureComponent {
     super(props);
     this._muiTheme = context.muiTheme || getMuiTheme();
     this.state = {
-      error: false,
-      errorOpen: false,
       open: this.props.open
     };
   }
@@ -136,40 +122,22 @@ class LoginModal extends React.PureComponent {
     } else {
       msg = formatMessage(messages.errormsg, {details: xmlhttp.status + ' ' + xmlhttp.statusText});
     }
-    this.setState({errorOpen: true, error: true, errorMsg: msg});
+    this.setState({errorMsg: msg});
   }
   close() {
     if (this.props.close) {
       this.props.close.call(this);
     }
   }
-  _handleRequestClose() {
-    this.setState({
-      errorOpen: false
-    });
-  }
   render() {
     const {formatMessage} = this.props.intl;
-    var error;
-    if (this.state.error === true) {
-      error = (<Snackbar
-        style={{transitionProperty : 'none'}}
-        open={this.state.errorOpen}
-        message={this.state.errorMsg}
-        autoHideDuration={2000}
-        onRequestClose={this._handleRequestClose.bind(this)}
-      />);
-    }
     var actions = [
-      <Button buttonType='Flat' primary={true} label={formatMessage(messages.loginbutton)} onTouchTap={this._doLogin.bind(this)} />,
-      <Button buttonType='Flat' label={formatMessage(messages.closebutton)} onTouchTap={this.close.bind(this)} />
+      <Button buttonType='Flat' primary={true} label={formatMessage(messages.loginbutton)} onTouchTap={this._doLogin.bind(this)} />
     ];
     return (
-      <Dialog className={classNames('sdk-component login-modal', this.props.className)} actions={actions} title={formatMessage(messages.title)} open={this.state.open} onRequestClose={this.close.bind(this)}>
-        {error}
-        <Paper zDepth={0}>{formatMessage(messages.helptext)}</Paper>
-        <TextField style={{width: '512px'}} floatingLabelText={formatMessage(messages.usernamelabel)} ref='username' /><br/>
-        <TextField style={{width: '512px'}} onKeyDown={this._onEnter.bind(this)} type="password" floatingLabelText={formatMessage(messages.passwordlabel)} ref='password' />
+      <Dialog contentStyle={{width: 500}} className={classNames('sdk-component login-modal', this.props.className)} actions={actions} title={formatMessage(messages.title)} open={this.state.open} onRequestClose={this.close.bind(this)}>
+        <TextField style={{width: 450}} floatingLabelText={formatMessage(messages.usernamelabel)} ref='username' /><br/>
+        <TextField errorText={this.state.errorMsg} style={{width: 450}} onKeyDown={this._onEnter.bind(this)} type="password" floatingLabelText={formatMessage(messages.passwordlabel)} ref='password' />
       </Dialog>
     );
   }

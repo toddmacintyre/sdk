@@ -49,6 +49,10 @@ class StrokeEditor extends React.PureComponent {
      * Css class name to apply on the root element of this component.
      */
     className: React.PropTypes.string,
+    /*
+     * If true, the element will not be clickable and will not display hover effects.
+     */
+    disabled: React.PropTypes.bool,
     /**
      * Initial value for hasStroke.
      */
@@ -72,6 +76,7 @@ class StrokeEditor extends React.PureComponent {
   };
 
   static defaultProps = {
+    disabled: false,
     initialStrokeColor: {
       rgb: {
         r: 0,
@@ -122,8 +127,8 @@ class StrokeEditor extends React.PureComponent {
     };
     return (
       <Paper zDepth={0} className={classNames('sdk-component stroke-editor', this.props.className)}>
-        <ListItem innerDivStyle={ boxStyle } primaryText={<Checkbox onCheck={this._onStrokeCheck.bind(this)} checked={this.state.hasStroke} label={formatMessage(messages.strokelabel)} />} rightIconButton={ <ColorPicker onChange={this._onChangeStroke.bind(this)} initialColor={this.state.strokeColor} /> } />
-        <ListItem innerDivStyle={ listStyle }>
+        <ListItem disabled={this.props.disabled} innerDivStyle={ boxStyle } primaryText={<Checkbox onCheck={this._onStrokeCheck.bind(this)} checked={this.state.hasStroke} label={formatMessage(messages.strokelabel)} />} rightIconButton={ <ColorPicker onChange={this._onChangeStroke.bind(this)} initialColor={this.state.strokeColor} /> } />
+        <ListItem disabled={this.props.disabled} innerDivStyle={ listStyle }>
           <TextField defaultValue={this.state.strokeWidth} onChange={this._onChangeStrokeWidth.bind(this)} hintText={formatMessage(messages.strokewidthlabel)} floatingLabelText={formatMessage(messages.strokewidthlabel)} floatingLabelFixed={true} fullWidth={true} />
         </ListItem>
       </Paper>

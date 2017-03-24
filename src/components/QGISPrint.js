@@ -410,7 +410,7 @@ class QGISPrint extends React.PureComponent {
     var listitems = this.props.layouts.map(function(lyt, idx) {
       var thumbnail;
       if (lyt.thumbnail) {
-        thumbnail = (<img src={this.props.thumbnailPath + lyt.thumbnail}/>);
+        thumbnail = (<img style={{maxWidth: 130}} src={this.props.thumbnailPath + lyt.thumbnail}/>);
       }
       return (<MenuItem onTouchTap={this._onClick.bind(this, lyt)} key={idx} value={lyt.name} primaryText={lyt.name}><div>{thumbnail}</div></MenuItem>);
     }, this);
@@ -468,7 +468,7 @@ class QGISPrint extends React.PureComponent {
     } else {
       return (
         <span className={classNames('sdk-component qgis-print', this.props.className)}>
-          <IconMenu anchorOrigin={{horizontal: 'left', vertical: 'top'}} targetOrigin={{horizontal: 'left', vertical: 'top'}} iconButtonElement={<Button disabled={this.state.disabled} label={formatMessage(messages.printmenutext)} />} value={this.state.layoutName}>
+          <IconMenu menuStyle={{width: 150}} anchorOrigin={{horizontal: 'left', vertical: 'top'}} targetOrigin={{horizontal: 'left', vertical: 'top'}} iconButtonElement={<Button disabled={this.state.disabled} label={formatMessage(messages.printmenutext)} />} value={this.state.layoutName}>
             {listitems}
           </IconMenu>
           {dialog}

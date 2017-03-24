@@ -132,6 +132,7 @@ class QueryBuilder extends React.PureComponent {
   }
   _onLayerSelectChange(layer) {
     this._layer = layer;
+    this.forceUpdate();
   }
   _onSubmit(evt) {
     evt.preventDefault();
@@ -204,6 +205,10 @@ class QueryBuilder extends React.PureComponent {
   render() {
     const {formatMessage} = this.props.intl;
     var count;
+    var id;
+    if (this._layer) {
+      id = this._layer.get('id');
+    }
     if (this.state.showCount === true) {
       count = (<Snackbar
         open={this.state.open}
@@ -214,7 +219,7 @@ class QueryBuilder extends React.PureComponent {
     }
     return (
       <Paper zDepth={0} className={classNames('sdk-component query-builder', this.props.className)}>
-        <LayerSelector {...this.props} onChange={this._onLayerSelectChange.bind(this)} id='layerSelector' ref='layerSelector' filter={this._filterLayerList} map={this.props.map} /><br/>
+        <LayerSelector {...this.props} value={id} onChange={this._onLayerSelectChange.bind(this)} id='layerSelector' ref='layerSelector' filter={this._filterLayerList} map={this.props.map} /><br/>
         <TextField floatingLabelText={formatMessage(messages.filterlabel)} errorText={this.state.errorText} ref='queryExpression' onChange={this._setQueryFilter.bind(this)} /><FilterHelp intl={this.props.intl} /><br/>
         <Toolbar>
           <RaisedButton label={formatMessage(messages.newbuttontext)} tooltip={formatMessage(messages.newbuttontitle)} onTouchTap={this._newSelection.bind(this)} />

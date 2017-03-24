@@ -45,9 +45,6 @@ import {Tabs, Tab} from 'material-ui/Tabs';
 global.Tabs = Tabs;
 global.Tab = Tab;
 
-import AddLayer from './components/AddLayer';
-global.AddLayer = AddLayer;
-
 import Bookmarks from './components/Bookmarks';
 global.Bookmarks = Bookmarks;
 

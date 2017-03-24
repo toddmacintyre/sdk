@@ -6,9 +6,11 @@ import {assert} from 'chai';
 import raf from 'raf';
 import ol from 'openlayers';
 import intl from '../mock-i18n';
+import injectTapEventPlugin from 'react-tap-event-plugin';
 import AddLayerModal from '../../src/components/AddLayerModal';
 
 raf.polyfill();
+injectTapEventPlugin();
 
 describe('AddLayerModal', function() {
 
@@ -79,12 +81,14 @@ describe('AddLayerModal', function() {
     var modal = ReactDOM.render((
       <AddLayerModal map={map} allowUserInput={false} sources={[{url: url, type: 'WMS', title: 'My WMS'}]} intl={intl} />
     ), container);
-    var result = modal.state.sources[modal.state.source].url;
-    assert.equal(result, url);
-    window.setTimeout(function() {
-      ReactDOM.unmountComponentAtNode(container);
-      done();
-    }, 500);
+    modal.setState({source: 0}, function() {
+      var result = modal.state.sources[modal.state.source].url;
+      assert.equal(result, url);
+      window.setTimeout(function() {
+        ReactDOM.unmountComponentAtNode(container);
+        done();
+      }, 500);
+    });
   });
 
 });

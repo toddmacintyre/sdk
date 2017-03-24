@@ -293,7 +293,7 @@ class FeatureStore extends EventEmitter {
       this._updateSelect();
     }
     this.emitChange();
-    return selected.count;
+    return selected.length;
   }
   _updateSelect() {
     var selectedFeatures = this._select.getFeatures();

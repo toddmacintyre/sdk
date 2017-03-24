@@ -35,7 +35,7 @@ const messages = defineMessages({
  * Navigation button that allows to get the map back into navigation (zoom, pan, info popup) mode.
  *
  * ```xml
- * <Navigation secondary={true} toggleGroup='navigation' toolId='nav' />
+ * <Navigation secondary={true} toggleGroup='navigation' />
  * ```
  *
  * ![Navigation](../Navigation.png)
@@ -63,6 +63,10 @@ class Navigation extends React.PureComponent {
      * @ignore
      */
     intl: intlShape.isRequired
+  };
+
+  static defaultProps = {
+    toolId: 'nav'
   };
 
   static contextTypes = {
