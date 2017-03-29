@@ -41,9 +41,9 @@ class LeftNav extends React.PureComponent {
       super(props);
     }
     componentWillMount() {
-      // if (this.props.tabs) {
-      //   this.setState({menuText: this.props.tabs[0].props.label});
-      // }
+      if (this.props.tabs) {
+        this.setState({menuText: this.props.tabs[0].props.label});
+      }
     }
     static childContextTypes = {
       muiTheme: React.PropTypes.object.isRequired
@@ -74,7 +74,8 @@ class LeftNav extends React.PureComponent {
       this.setState({
         selectedIndex: value.props.value,
         menuOpen: false,
-        menuText: value.props.primaryText
+        menuText: value.props.primaryText,
+        appBarIcon: this.rightIcon[value.props.value]
       });
     };
     static defaultProps = {
@@ -82,7 +83,10 @@ class LeftNav extends React.PureComponent {
       menuOpen: false,
       width: 396
     };
-
+    getRightIcon = () => {
+      return 'test';
+    }
+    rightIcon = {};
     render() {
       const iconStyles = {
         color: '#fff'
@@ -92,14 +96,19 @@ class LeftNav extends React.PureComponent {
         display: 'none'
       };
       var menuItems;
+      var icons = {}
       if (this.props.tabList) {
-        tabs = (<Tabs tabItemContainerStyle = { noDisplayStyle } inkBarStyle = { noDisplayStyle } value = { this.state.selectedIndex }>{this.props.tabList}</Tabs>
-        );
+        tabs = (<Tabs tabItemContainerStyle = { noDisplayStyle } inkBarStyle = { noDisplayStyle } value = { this.state.selectedIndex }>{this.props.tabList}</Tabs>);
         menuItems = this.props.tabList.map(function(tab) {
           return (<MenuItem primaryText = { tab.props.label } value = { tab.props.value }/>);
         });
+        this.props.tabList.forEach((tab) => {
+          if (tab.props.icon) {
+            icons[tab.props.value] = tab.props.icon;
+          }
+        });
       }
-
+      this.rightIcon = icons;
       return (
         <Drawer width = { this.props.width } open = { this.props.open } >
           <AppBar title = { <span><span onTouchTap = { this.handleMenuTouchTap }> {this.state.menuText} <NavigationArrowDropDown style = { iconStyles }/></span>
@@ -112,7 +121,7 @@ class LeftNav extends React.PureComponent {
                   <Menu onItemTouchTap = { this.handleMenuChange } children={menuItems}/>
                </Popover></span>}
             iconElementLeft = { <IconButton> <NavigationArrowBack/> </IconButton>}
-            iconElementRight = { <IconButton> <NavigationArrowBack/> </IconButton>} />
+            iconElementRight = {this.state.appBarIcon} />
           { tabs }
           { this.props.children }
         </Drawer>
