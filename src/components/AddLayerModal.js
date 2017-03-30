@@ -185,12 +185,20 @@ class AddLayerModal extends React.PureComponent {
       url: React.PropTypes.string.isRequired
     })),
     /**
-     * Should be user be able to provide their own url?
+     * If true users can Input new layers
      */
     allowUserInput: React.PropTypes.bool,
     /**
-     * Should we allow people to upload their local vector files?
-     */
+    *  Callback for closing the modal
+    */
+    onRequestClose: React.PropTypes.func,
+    /**
+    *  Controls opening the modal
+    */
+    open : React.PropTypes.bool,
+     /**
+      * Should we allow people to upload their local vector files?
+      */
     allowUpload: React.PropTypes.bool,
     /**
      * @ignore

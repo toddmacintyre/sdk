@@ -75,7 +75,8 @@ class LeftNav extends React.PureComponent {
         selectedIndex: value.props.value,
         menuOpen: false,
         menuText: value.props.primaryText,
-        appBarIcon: this.rightIcon[value.props.value]
+        appBarIcon: this.rightIcon[value.props.value].icon,
+        appBarOnTouch: this.rightIcon[value.props.value].onTouchTap
       });
     };
     static defaultProps = {
@@ -83,9 +84,6 @@ class LeftNav extends React.PureComponent {
       menuOpen: false,
       width: 396
     };
-    getRightIcon = () => {
-      return 'test';
-    }
     rightIcon = {};
     render() {
       const iconStyles = {
@@ -95,17 +93,15 @@ class LeftNav extends React.PureComponent {
       var noDisplayStyle = {
         display: 'none'
       };
-      var menuItems;
+      var menuItems = [];
       var icons = {}
       if (this.props.tabList) {
         tabs = (<Tabs tabItemContainerStyle = { noDisplayStyle } inkBarStyle = { noDisplayStyle } value = { this.state.selectedIndex }>{this.props.tabList}</Tabs>);
-        menuItems = this.props.tabList.map(function(tab) {
-          return (<MenuItem primaryText = { tab.props.label } value = { tab.props.value }/>);
-        });
         this.props.tabList.forEach((tab) => {
           if (tab.props.icon) {
-            icons[tab.props.value] = tab.props.icon;
+            icons[tab.props.value] = {icon: tab.props.icon, onTouchTap: tab.props.onActive};
           }
+          menuItems.push(<MenuItem primaryText = { tab.props.label } value = { tab.props.value }/>);
         });
       }
       this.rightIcon = icons;
@@ -121,7 +117,8 @@ class LeftNav extends React.PureComponent {
                   <Menu onItemTouchTap = { this.handleMenuChange } children={menuItems}/>
                </Popover></span>}
             iconElementLeft = { <IconButton> <NavigationArrowBack/> </IconButton>}
-            iconElementRight = {this.state.appBarIcon} />
+            iconElementRight = {this.state.appBarIcon}
+            onRightIconButtonTouchTap = {this.state.appBarOnTouch} />
           { tabs }
           { this.props.children }
         </Drawer>

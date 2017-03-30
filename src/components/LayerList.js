@@ -294,16 +294,6 @@ class LayerList extends React.PureComponent {
       }
     }
   }
-  _showAddLayer() {
-    this.setState({
-      addLayerOpen: true
-    });
-  }
-  _closeAddLayer() {
-    this.setState({
-      addLayerOpen: false
-    });
-  }
   _showAddBaseMap() {
     this.refs.addbasemapmodal.getWrappedInstance().open();
   }
@@ -325,10 +315,7 @@ class LayerList extends React.PureComponent {
     if (this.props.addLayer || this.props.addBaseMap) {
       var layerAdd, baseAdd;
       if (this.props.addLayer) {
-        layerAdd =  <FloatingActionButton className='layerAddButton' onTouchTap={this._showAddLayer.bind(this)}><i className='ms ms-layers-add'/></FloatingActionButton>
-
-        // layerAdd = <RaisedButton icon={<NoteAdd />} label={formatMessage(messages.addlayertext)} onTouchTap={this._showAddLayer.bind(this)} disableTouchRipple={true}/>;
-        layerModal = <AddLayerModal open={this.state.addLayerOpen} inline={this.props.inlineDialogs} srsName={this.props.map.getView().getProjection().getCode()} allowUserInput={this.props.addLayer.allowUserInput} onRequestClose={this._closeAddLayer.bind(this)} sources={this.props.addLayer.sources} map={this.props.map} />;
+        layerModal = <AddLayerModal open={this.props.addLayer.open} inline={this.props.inlineDialogs} srsName={this.props.map.getView().getProjection().getCode()} allowUserInput={this.props.addLayer.allowUserInput} onRequestClose={this.props.addLayer.onRequestClose.bind(this)} sources={this.props.addLayer.sources} map={this.props.map} />;
       }
       if (this.props.addBaseMap) {
         baseAdd = <RaisedButton icon={<BaseMapIcon />} label={formatMessage(messages.addbasemaptext)} onTouchTap={this._showAddBaseMap.bind(this)} disableTouchRipple={true}/>;
