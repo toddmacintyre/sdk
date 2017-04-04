@@ -14,7 +14,6 @@ import React from 'react';
 import Dropzone from 'react-dropzone';
 import util from '../util';
 import ol from 'openlayers';
-import Dialog from './Dialog';
 import Snackbar from 'material-ui/Snackbar';
 import {defineMessages, injectIntl, intlShape} from 'react-intl';
 import TextField from 'material-ui/TextField';
