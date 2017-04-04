@@ -263,6 +263,16 @@ class LayerList extends React.PureComponent {
     }
     return layerNodes;
   }
+  _showAddLayer() {
+    this.setState({
+      addLayerOpen: true
+    });
+  }
+  _closeAddLayer() {
+    this.setState({
+      addLayerOpen: false
+    });
+  }
   _showPanel(evt) {
     if (!this.state.visible) {
       this.setState({visible: true});

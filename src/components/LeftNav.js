@@ -7,10 +7,14 @@ import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
 import IconButton from 'material-ui/IconButton';
 
 /**
- * Drawer to use for left nav
+ * Drawer to use for left nav, drawer uses dropdown list to control tabs
  *
  * ```xml
- * <LeftNav  />
+ * const tablist = [   <Tab key={1} value={1} label='Legend'><Legend map={map} /></Tab>,
+ *                      <Tab key={2} value={2} label='FeatureTabe'><FeatureTable ref='table' map={map} /></Tab>,
+ *                      <Tab key={3} value={3} label='WFST'><WFST ref='edit' toggleGroup='navigation' showEditForm={true} map={map} />]</Tab>
+ *                  ];
+ * <LeftNav tabList={tablist}  />
  * ```
  */
 class LeftNav extends React.PureComponent {
@@ -34,7 +38,11 @@ class LeftNav extends React.PureComponent {
       /**
        * If true drawer is opened
        */
-      open: React.PropTypes.bool
+      open: React.PropTypes.bool,
+      /**
+       *  Callback for closing the drawer
+       */
+      onRequestClose: React.PropTypes.func
 
     };
     constructor(props, context) {
@@ -84,6 +92,9 @@ class LeftNav extends React.PureComponent {
         appBarOnTouch: this.rightIcon[value.props.value].onTouchTap
       });
     };
+    close = (event, value) => {
+      this.props.onRequestClose();
+    }
     static defaultProps = {
       open: true,
       menuOpen: false,
@@ -124,6 +135,8 @@ class LeftNav extends React.PureComponent {
                   <Menu onItemTouchTap = { this.handleMenuChange } children={menuItems}/>
                </Popover></span>}
             iconElementLeft = { <IconButton> <NavigationArrowBack/> </IconButton>}
+            onLeftIconButtonTouchTap={this.close}
+
             iconElementRight = {this.state.appBarIcon}
             onRightIconButtonTouchTap = {this.state.appBarOnTouch} />
           { tabs }
