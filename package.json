@@ -1,7 +1,7 @@
 {
   "name": "boundless-sdk-build",
   "private": true,
-  "version": "0.10.30",
+  "version": "0.10.31",
   "description": "SDK for OpenLayers 3 and React plus Flux",
   "main": "index.js",
   "repository": {
@@ -54,6 +54,9 @@
   },
   "author": "Boundless Spatial, Inc.",
   "license": "Apache-2.0",
+  "engines": {
+    "node": ">6"
+  },
   "peerDependencies": {
     "react": "15.3.2",
     "react-dom": "15.3.2",

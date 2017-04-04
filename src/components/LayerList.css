@@ -6,16 +6,17 @@
     flex: 1; }
 
 .menuItem .fixedContainer {
-  top: 6px !important;
-  right: 14px !important;
-  width: 130px;
+  top: 16px !important;
+  width: 78px;
   display: flex !important; }
   .menuItem .fixedContainer i {
-    flex: 1;
-    padding: 10px; }
+    flex: 1; }
 
 .menuItem + div {
   padding: 0 0 0 10px !important; }
+
+.noBorderPaper {
+  margin: 20px; }
 
 .layer-switcher {
   position: absolute;

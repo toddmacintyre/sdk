@@ -41,8 +41,13 @@ class LeftNav extends React.PureComponent {
       super(props);
     }
     componentWillMount() {
-      if (this.props.tabs) {
-        this.setState({menuText: this.props.tabs[0].props.label});
+      if (this.props.tabList) {
+        this.setState({
+          menuText: this.props.tabList[0].props.label,
+          selectedIndex: this.props.tabList[0].props.value,
+          appBarIcon: this.props.tabList[0].props.icon,
+          appBarOnTouch: this.props.tabList[0].props.onActive
+        });
       }
     }
     static childContextTypes = {
@@ -82,7 +87,7 @@ class LeftNav extends React.PureComponent {
     static defaultProps = {
       open: true,
       menuOpen: false,
-      width: 396
+      width: 360
     };
     rightIcon = {};
     render() {
@@ -100,6 +105,8 @@ class LeftNav extends React.PureComponent {
         this.props.tabList.forEach((tab) => {
           if (tab.props.icon) {
             icons[tab.props.value] = {icon: tab.props.icon, onTouchTap: tab.props.onActive};
+          }else {
+            icons[tab.props.value] = {icon: <span/>, onTouchTap: null};
           }
           menuItems.push(<MenuItem primaryText = { tab.props.label } value = { tab.props.value }/>);
         });
